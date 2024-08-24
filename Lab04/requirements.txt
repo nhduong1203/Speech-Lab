@@ -1,0 +1,3 @@
+transformers-4.44.2
+https://github.com/kpu/kenlm/archive/master.zip
+sentencepiece
