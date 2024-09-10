@@ -145,16 +145,16 @@ transform = AddGaussianNoise(
 augmented_sound = transform(my_waveform_ndarray, sample_rate=16000)
 ```
 
-### Shift
+### Trim
+
+Trim leading and trailing silence from an audio signal. It considers threshold (in decibels) below reference defined in parameter top_db as silence.
 
 ```
-from audiomentations import TimeMask
+from audiomentations import Trim
 
-transform = TimeMask(
-    min_band_part=0.1,
-    max_band_part=0.15,
-    fade=True,
-    p=1.0,
+transform = Trim(
+    top_db=30.0,
+    p=1.0
 )
 
 augmented_sound = transform(my_waveform_ndarray, sample_rate=16000)
@@ -173,3 +173,60 @@ The key idea behind SpecAugment is to augment the training data by applying dist
 - **Frequency Masking**: Randomly masking out continuous bands of frequencies in the spectrogram to make the model less sensitive to missing frequency components.
 - **Time Masking**: Randomly masking out segments of the time axis to simulate variations in speech timing and make the model more resilient to temporal distortions.
 - **Time Warping**: Slightly warping the time axis of the spectrogram to introduce temporal variations.
+
+The implementation of SpecAugment you can check in `SpecAugment.py`, which is from `https://github.com/bobchennan/sparse_image_warp_pytorch`. 
+
+For **Frequency Masking** and **Time Masking**, we and essily implement it, :
+
+```python
+def freq_mask(spec, F=30, num_masks=1, pad_value=0):
+    """Frequency masking
+
+    :param torch.Tensor spec: input tensor with shape (dim, T)
+    :param int F: maximum width of each mask
+    :param int num_masks: number of masks
+    :param bool pad_value: value for padding
+    """
+    cloned = spec.unsqueeze(0).clone()
+    num_mel_channels = cloned.shape[1]
+
+    for i in range(0, num_masks):
+        f = random.randrange(0, F)
+        f_zero = random.randrange(0, num_mel_channels - f)
+
+        # avoids randrange error if values are equal and range is empty
+        if (f_zero == f_zero + f):
+            return cloned.squeeze(0)
+
+        mask_end = random.randrange(f_zero, f_zero + f)
+        cloned[0][f_zero:mask_end] = pad_value
+
+    return cloned.squeeze(0)
+
+
+def time_mask(spec, T=40, num_masks=1, p=0.2, pad_value=0):
+    """Time masking
+
+    :param torch.Tensor spec: input tensor with shape (dim, T)
+    :param int T: maximum width of each mask
+    :param int num_masks: number of masks
+    :param bool pad_value: value for padding
+    """
+    cloned = spec.unsqueeze(0).clone()
+    len_spectro = cloned.shape[2]
+    T = min(T, int(len_spectro * p / num_masks))
+
+    for i in range(0, num_masks):
+        t = random.randrange(0, T)
+        t_zero = random.randrange(0, len_spectro - t)
+
+        # avoids randrange error if values are equal and range is empty
+        if (t_zero == t_zero + t):
+            return cloned.squeeze(0)
+
+        mask_end = random.randrange(t_zero, t_zero + t)
+        cloned[0][:, t_zero:mask_end] = pad_value
+    return cloned.squeeze(0)
+```
+
+For **Time Warping**, the process is more complex. In the paper, the author uses the `sparse_image_warp` function from TensorFlow, but there is no direct equivalent function in PyTorch. Instead, you can use the `time_warp` function from the SpecAugment PyTorch implementation. This function applies time warping to the spectrogram, resulting in a distorted time axis where specific regions are stretched or compressed.
