@@ -174,9 +174,9 @@ The key idea behind SpecAugment is to augment the training data by applying dist
 - **Time Masking**: Randomly masking out segments of the time axis to simulate variations in speech timing and make the model more resilient to temporal distortions.
 - **Time Warping**: Slightly warping the time axis of the spectrogram to introduce temporal variations.
 
-The implementation of SpecAugment you can check in `SpecAugment.py`, which is from `https://github.com/bobchennan/sparse_image_warp_pytorch`. 
+You can check the implementation of SpecAugment in the repository at `https://github.com/bobchennan/sparse_image_warp_pytorch`.
 
-For **Frequency Masking** and **Time Masking**, we and essily implement it, :
+For **Frequency Masking** and **Time Masking**, we can easily implement them:
 
 ```python
 def freq_mask(spec, F=30, num_masks=1, pad_value=0):
