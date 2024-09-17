@@ -8,7 +8,7 @@
 # Use a pipeline as a high-level helper
 from transformers import pipeline
 
-pipe = pipeline("automatic-speech-recognition", model="openai/whisper-small")
+pipe = pipeline("automatic-speech-recognition", model="openai/whisper-large-v3")
 ```
 
 **Hugging Face Inference Endpoints:** To bring our model to production, Hugging Face Inference Endpoints allow developers to deploy machine learning models quickly and efficiently, particularly those hosted on the Hugging Face Model Hub. This service simplifies the process of turning pre-trained models into production-ready APIs with just a few clicks. With minimal setup, you can deploy any model from the Hugging Face Hub to a cloud provider like AWS, GCP, or Azure.
@@ -21,7 +21,7 @@ On  the Hugging Face Model Repository, go to your expected model -> Deploy -> In
 
 ![alt text](image-1.png)
 
-On inference endpoints page, you can see the `openai/whisper-small` model that we have choosen from Hub, you also can choose another model here for your Endpoint. Named your endpoint with your favorite name.
+On inference endpoints page, you can see the `openai/whisper-large-v3` model that we have choosen from Hub, you also can choose another model here for your Endpoint. Named your endpoint with your favorite name.
 
 At **Instance Configuration**, you can choose your favorite cloud provider, include: AWS, Microsoft Azure and GCP. Also here, you can choose the instance that match your requirement. Check it information and its price.
 ![alt text](image.png)
@@ -37,5 +37,37 @@ Automatic Scale-to-zero can turn off your Endpoint after a period that have no a
 
 You can also config some parameter like Number of replicas, Container Type, Environment Variables, Revision at Advanced configuration. Checkout it.
 
+Here, We will create an example `openai/whisper-large-v3` endpoint, using AWS with T4 GPU. It will take a few minute to create the enpoint.
+![alt text](image-5.png) 
 
+After the endpoint is ready, you can test it in playground.
+![alt text](image-6.png)
+
+One important way to bring the endpoint to product is using it via API, to using a protected Inference Endpoint, you need to provide your HuggingFace Access Token, as follow:
+```python
+import requests
+API_URL = "https://r0rl95p5bkd64d5d.us-east-1.aws.endpoints.huggingface.cloud"
+headers = {
+	"Accept" : "application/json",
+	"Authorization": "Bearer hf_XXX",
+	"Content-Type": "audio/wav" 
+}
+
+def query(filename):
+	with open(filename, "rb") as f:
+		data = f.read()
+	response = requests.post(API_URL, headers=headers, data=data)
+	return response.json()
+
+output = query("./test_audio.wav")
+print(output)
+```
+Output:
+```
+{'text': ' Printing, in the only sense with which we are at present concerned, differs from most, if not from all, the arts and crafts represented in the exhibition'}
+```
+
+# 2. Custom HuggingFace Inference Endpoint
+
+In the previous section, we introduce how to create an endpoint for a model in HuggingFace Model Hub and how to use it. In this section, we will show how to create a model for a custom task
 
