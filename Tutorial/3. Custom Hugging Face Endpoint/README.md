@@ -15,35 +15,43 @@ pipe = pipeline("automatic-speech-recognition", model="openai/whisper-large-v3")
 
 # Hugging Face Inference Endpoints with Whisper model
 
-Let's take a example of how to deploy a Whisper model to an Hugging Face Inference Endpoints. 
+Let’s take an example of how to deploy a Whisper model to a Hugging Face Inference Endpoint.
 
-On  the Hugging Face Model Repository, go to your expected model -> Deploy -> Inference Enpoint.
+In the Hugging Face Model Repository, navigate to your desired model, then go to Deploy and select Inference Endpoint.
 
 ![alt text](image-1.png)
 
-On inference endpoints page, you can see the `openai/whisper-large-v3` model that we have choosen from Hub, you also can choose another model here for your Endpoint. Named your endpoint with your favorite name.
+On the Inference Endpoints page, you'll see the openai/whisper-large-v3 model that we selected from the Hub. You can also choose a different model for your endpoint here. Give your endpoint a name of your choice.
 
-At **Instance Configuration**, you can choose your favorite cloud provider, include: AWS, Microsoft Azure and GCP. Also here, you can choose the instance that match your requirement. Check it information and its price.
+## Instance Configuration
+
+## Cloud vendor
+In the Instance Configuration section, you can choose your preferred cloud vendor, including AWS, Microsoft Azure, or GCP. You can also select the instance that best matches your requirements. Be sure to review its details and pricing.
 ![alt text](image.png)
 
-Automatic Scale-to-zero can turn off your Endpoint after a period that have no activity. It's saving cost, but in other side, it take some time to scale back up.
+Automatic Scale-to-Zero can shut down your endpoint after a period of inactivity, which helps reduce costs. However, it may take some time to scale back up when needed.
 ![alt text](image-3.png)
 
-**Endpoint security level** is the most important setting in our Endpoint. There are 3 options, choose it suitale for your purpose.
-- Public: The Endpoint is public on internet. Everyone can use it, no authentication is required.
-- Protect: The Endpoint is created in a public subnet manage by hugging face, but you need to provide a hugging face token to access the Endpoint.
-- Private: A private Endpoint is only available through an intra-region secured AWS PrivateLink connection. Private Endpoints are not available from the Internet.
+The Endpoint security level is the most important setting for your endpoint. There are three options; choose the one that best suits your needs:
+
+- Public: The endpoint is publicly accessible on the internet, and no authentication is required.
+
+- Protected: The endpoint is created in a public subnet managed by Hugging Face, but access requires a Hugging Face token.
+
+- Private: The endpoint is only accessible through an intra-region secured AWS PrivateLink connection, and it is not available from the internet.
+
 ![alt text](image-4.png)
 
-You can also config some parameter like Number of replicas, Container Type, Environment Variables, Revision at Advanced configuration. Checkout it.
+You can also configure parameters such as the number of replicas, container type, environment variables, and revision under Advanced Configuration. Be sure to check it out.
 
-Here, We will create an example `openai/whisper-large-v3` endpoint, using AWS with T4 GPU. It will take a few minute to create the enpoint.
+## Usage
+Here, we will create an example openai/whisper-large-v3 endpoint using AWS with a T4 GPU. It will take a few minutes to create the endpoint. 
 ![alt text](image-5.png) 
 
-After the endpoint is ready, you can test it in playground.
+Once it's ready, you can test it in the playground.
 ![alt text](image-6.png)
 
-One important way to bring the endpoint to product is using it via API, to using a protected Inference Endpoint, you need to provide your HuggingFace Access Token, as follow:
+An important way to integrate the endpoint into a product is by accessing it via API. To use a protected Inference Endpoint, you'll need to provide your Hugging Face Access Token, as shown below:
 ```python
 import requests
 API_URL = "https://r0rl95p5bkd64d5d.us-east-1.aws.endpoints.huggingface.cloud"
@@ -69,5 +77,136 @@ Output:
 
 # 2. Custom HuggingFace Inference Endpoint
 
-In the previous section, we introduce how to create an endpoint for a model in HuggingFace Model Hub and how to use it. In this section, we will show how to create a model for a custom task
+In the previous section, we introduced how to create and use an endpoint for a model in the Hugging Face Model Hub. However, with a default model, you can only perform one task per API. In some scenarios, you may want to perform multiple tasks or features within a single API, such as ASR and diarization. In this section, we will explain how to create a custom Inference Endpoint to support your desired features.
+
+First, create your own model. Then, go to File and Versions. There are two important files you need to manage:
+
+- handler.py: This file defines the flow of your endpoint.
+- config.py: This file retrieves environment variables for your endpoint and sets inference parameters.
+
+Additionally, include any dependency libraries in requirements.txt and other files as needed for your project. For example, the diarization processor will be placed in diarization_utils.py.
+
+Here is our `config.py` file:
+```python
+import logging
+
+from pydantic import BaseModel
+from pydantic_settings import BaseSettings
+from typing import Optional, Literal
+
+logger = logging.getLogger(__name__)
+
+class ModelSettings(BaseSettings):
+    asr_model: str
+    assistant_model: Optional[str]
+    diarization_model: Optional[str]
+    hf_token: Optional[str]
+
+
+class InferenceConfig(BaseModel):
+    task: Literal["transcribe", "translate"] = "transcribe"
+    batch_size: int = 24
+    assisted: bool = False
+    chunk_length_s: int = 30
+    sampling_rate: int = 16000
+    language: Optional[str] = None
+    num_speakers: Optional[int] = None
+    min_speakers: Optional[int] = None
+    max_speakers: Optional[int] = None
+
+model_settings = ModelSettings()
+```
+
+In `handler.py` file, we need to focus on 2 function of `class EndpointHandler()`.
+
+`__init__` function will initialize our model base on the parameter in ModelSetting
+```python
+def __init__(self, path=""):
+
+        device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        logger.info(f"Using device: {device.type}")
+        torch_dtype = torch.float32 if device.type == "cpu" else torch.float16
+
+        self.assistant_model = AutoModelForCausalLM.from_pretrained(
+            model_settings.assistant_model,
+            torch_dtype=torch_dtype,
+            low_cpu_mem_usage=True,
+            use_safetensors=True
+        ) if model_settings.assistant_model else None
+
+        if self.assistant_model:
+            self.assistant_model.to(device)
+
+        self.asr_pipeline = pipeline(
+            "automatic-speech-recognition",
+            model=model_settings.asr_model,
+            torch_dtype=torch_dtype,
+            device=device
+        )
+
+        if model_settings.diarization_model:
+            # diarization pipeline doesn't raise if there is no token
+            HfApi().whoami(model_settings.hf_token)
+            self.diarization_pipeline = Pipeline.from_pretrained(
+                checkpoint_path=model_settings.diarization_model,
+                use_auth_token=model_settings.hf_token,
+            )
+            self.diarization_pipeline.to(device)
+        else:
+            self.diarization_pipeline = None
+```
+
+Otherwise, `__call__` will handle inference request, and create the model workflow.
+```
+def __call__(self, inputs):
+        file = inputs.pop("inputs")
+        file = base64.b64decode(file)
+        parameters = inputs.pop("parameters", {})
+        try:
+            parameters = InferenceConfig(**parameters)
+        except ValidationError as e:
+            logger.error(f"Error validating parameters: {e}")
+            raise HTTPException(status_code=400, detail=f"Error validating parameters: {e}")
+            
+        logger.info(f"inference parameters: {parameters}")
+
+        generate_kwargs = {
+            "task": parameters.task, 
+            "language": parameters.language,
+            "assistant_model": self.assistant_model if parameters.assisted else None
+        }
+
+        try:
+            asr_outputs = self.asr_pipeline(
+                file,
+                chunk_length_s=parameters.chunk_length_s,
+                batch_size=parameters.batch_size,
+                generate_kwargs=generate_kwargs,
+                return_timestamps=True,
+            )
+        except RuntimeError as e:
+            logger.error(f"ASR inference error: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"ASR inference error: {str(e)}")
+        except Exception as e:
+            logger.error(f"Unknown error diring ASR inference: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Unknown error diring ASR inference: {str(e)}")
+
+        if self.diarization_pipeline:
+            try:
+                transcript = diarize(self.diarization_pipeline, file, parameters, asr_outputs)
+            except RuntimeError as e:
+                logger.error(f"Diarization inference error: {str(e)}")
+                raise HTTPException(status_code=400, detail=f"Diarization inference error: {str(e)}")
+            except Exception as e:
+                logger.error(f"Unknown error during diarization: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Unknown error during diarization: {str(e)}")
+        else:
+            transcript = []
+
+        return {
+            "speakers": transcript,
+            "chunks": asr_outputs["chunks"],
+            "text": asr_outputs["text"],
+        }
+```
 

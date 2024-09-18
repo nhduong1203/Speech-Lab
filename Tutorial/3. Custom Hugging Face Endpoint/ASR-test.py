@@ -1,16 +1,17 @@
+import base64
 import requests
-API_URL = "https://r0rl95p5bkd64d5d.us-east-1.aws.endpoints.huggingface.cloud"
-headers = {
-	"Accept" : "application/json",
-	"Authorization": "Bearer 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",
-	"Content-Type": "audio/wav" 
+
+API_URL = "https://dpmbwhnur9m5nn4z.us-east-1.aws.endpoints.huggingface.cloud"
+filepath = "./audio.mp3"
+
+with open(filepath, "rb") as f:
+    audio_encoded = base64.b64encode(f.read()).decode("utf-8")
+
+data = {
+    "inputs": audio_encoded,
+    "parameters": {
+    }
 }
 
-def query(filename):
-	with open(filename, "rb") as f:
-		data = f.read()
-	response = requests.post(API_URL, headers=headers, data=data)
-	return response.json()
-
-output = query("./test_audio.wav")
-print(output)
+resp = requests.post(API_URL, json=data, headers={"Authorization": "Bearer hf_XX"})
+print(resp.json())
