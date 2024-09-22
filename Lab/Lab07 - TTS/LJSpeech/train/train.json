@@ -1,50 +1,10 @@
-{
-    "audio_filepath": "./LJSpeech/train/wavs/LJ001-0001.wav",
-    "text": "Printing, in the only sense with which we are at present concerned, differs from most if not from all the arts and crafts represented in the Exhibition",
-    "duration": 9.65501133786848
-}
-{
-    "audio_filepath": "./LJSpeech/train/wavs/LJ001-0002.wav",
-    "text": "in being comparatively modern.",
-    "duration": 1.899546485260771
-}
-{
-    "audio_filepath": "./LJSpeech/train/wavs/LJ001-0003.wav",
-    "text": "For although the Chinese took impressions from wood blocks engraved in relief for centuries before the woodcutters of the Netherlands, by a similar process",
-    "duration": 9.666621315192744
-}
-{
-    "audio_filepath": "./LJSpeech/train/wavs/LJ001-0004.wav",
-    "text": "produced the block books, which were the immediate predecessors of the true printed book,",
-    "duration": 5.138730158730159
-}
-{
-    "audio_filepath": "./LJSpeech/train/wavs/LJ001-0005.wav",
-    "text": "the invention of movable metal letters in the middle of the fifteenth century may justly be considered as the invention of the art of printing.",
-    "duration": 8.110884353741497
-}
-{
-    "audio_filepath": "./LJSpeech/train/wavs/LJ001-0006.wav",
-    "text": "And it is worth mention in passing that, as an example of fine typography,",
-    "duration": 5.684399092970522
-}
-{
-    "audio_filepath": "./LJSpeech/train/wavs/LJ001-0007.wav",
-    "text": "the earliest book printed with movable types, the Gutenberg, or \"forty-two line Bible\" of about 1455,",
-    "duration": 8.38952380952381
-}
-{
-    "audio_filepath": "./LJSpeech/train/wavs/LJ001-0008.wav",
-    "text": "has never been surpassed.",
-    "duration": 1.7834467120181405
-}
-{
-    "audio_filepath": "./LJSpeech/train/wavs/LJ001-0009.wav",
-    "text": "Printing, then, for our purpose, may be considered as the art of making books by means of movable types.",
-    "duration": 7.55360544217687
-}
-{
-    "audio_filepath": "./LJSpeech/train/wavs/LJ001-0010.wav",
-    "text": "Now, as all books not primarily intended as picture-books consist principally of types composed to form letterpress,",
-    "duration": 8.819092970521542
-}
+{"audio_filepath": "./LJSpeech/train/wavs/LJ001-0001.wav", "duration": 9.65501133786848, "text": "Printing, in the only sense with which we are at present concerned, differs from most if not from all the arts and crafts represented in the Exhibition"}
+{"audio_filepath": "./LJSpeech/train/wavs/LJ001-0002.wav", "duration": 1.899546485260771, "text": "in being comparatively modern."}
+{"audio_filepath": "./LJSpeech/train/wavs/LJ001-0003.wav", "duration": 9.666621315192744, "text": "For although the Chinese took impressions from wood blocks engraved in relief for centuries before the woodcutters of the Netherlands, by a similar process"}
+{"audio_filepath": "./LJSpeech/train/wavs/LJ001-0004.wav", "duration": 5.138730158730159, "text": "produced the block books, which were the immediate predecessors of the true printed book,"}
+{"audio_filepath": "./LJSpeech/train/wavs/LJ001-0005.wav", "duration": 8.110884353741497, "text": "the invention of movable metal letters in the middle of the fifteenth century may justly be considered as the invention of the art of printing."}
+{"audio_filepath": "./LJSpeech/train/wavs/LJ001-0006.wav", "duration": 5.684399092970522, "text": "And it is worth mention in passing that, as an example of fine typography,"}
+{"audio_filepath": "./LJSpeech/train/wavs/LJ001-0007.wav", "duration": 8.38952380952381, "text": "the earliest book printed with movable types, the Gutenberg, or \"forty-two line Bible\" of about 1455,"}
+{"audio_filepath": "./LJSpeech/train/wavs/LJ001-0008.wav", "duration": 1.7834467120181405, "text": "has never been surpassed."}
+{"audio_filepath": "./LJSpeech/train/wavs/LJ001-0009.wav", "duration": 7.55360544217687, "text": "Printing, then, for our purpose, may be considered as the art of making books by means of movable types."}
+{"audio_filepath": "./LJSpeech/train/wavs/LJ001-0010.wav", "duration": 8.819092970521542, "text": "Now, as all books not primarily intended as picture-books consist principally of types composed to form letterpress,"}
